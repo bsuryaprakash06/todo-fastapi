@@ -1,5 +1,5 @@
 from fastapi import FastAPI, HTTPException
-from typing import List
+from typing import List, Optional
 from app.data import tasks
 from app.helpers import get_task_by_id, generate_new_id
 from app.schemas import Task, TaskCreate, TaskUpdate
@@ -15,8 +15,21 @@ def health_check():
     return {"status": "ok"}
 
 @app.get("/tasks", response_model=List[Task])
-def get_tasks():
+def get_tasks(search: Optional[str] = None):
+    if search:
+        return [t for t in tasks if search.lower() in t["title"].lower()]
     return tasks
+
+@app.get("/stats")
+def get_stats():
+    total = len(tasks)
+    completed = sum(1 for t in tasks if t["done"])
+    pending = total - completed
+    return {
+        "total": total,
+        "completed": completed,
+        "pending": pending
+    }
 
 @app.get("/tasks/{task_id}", response_model=Task)
 def get_task(task_id: int):
