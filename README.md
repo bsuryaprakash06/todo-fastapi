@@ -1,6 +1,6 @@
 # Todo FastAPI
 
-A lightweight RESTful API for managing tasks, built with FastAPI and designed to demonstrate CRUD operations, request validation, and interactive API documentation.
+A lightweight RESTful API for managing tasks built with FastAPI, featuring CRUD operations, request validation, and interactive API documentation.
 
 ## Features
 
@@ -47,11 +47,11 @@ Start the development server with Uvicorn:
 uvicorn app.main:app --reload
 ```
 
+The API will be available at `http://127.0.0.1:8000`.
+
 ## API Documentation
 
-Interactive API documentation is available at:
-
-http://127.0.0.1:8000/docs
+The interactive API documentation is available at `http://127.0.0.1:8000/docs`.
 
 ![Swagger Screenshot](swagger_screenshot.png)
 
@@ -83,8 +83,8 @@ curl -i -X 'POST' \
 **Response:**
 ```http
 HTTP/1.1 201 Created
-content-length: 49
-content-type: application/json
+Content-Length: 49
+Content-Type: application/json
 
 {
   "title": "Study FastAPI",
@@ -111,4 +111,4 @@ todo-fastapi/
 
 ## License
 
-Licensed under the MIT License.
+This project is licensed under the MIT License.
