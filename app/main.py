@@ -55,3 +55,11 @@ def update_task(task_id: int, task_in: TaskUpdate):
         task["done"] = task_in.done
         
     return task
+
+@app.delete("/tasks/{task_id}", status_code=204)
+def delete_task(task_id: int):
+    task = get_task_by_id(task_id)
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+    tasks.remove(task)
+    return None
