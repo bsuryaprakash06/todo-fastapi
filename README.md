@@ -1,14 +1,23 @@
 # Todo FastAPI
 
-A clean, minimal, and fully functional REST API for managing tasks, built with FastAPI. This project focuses on excellent documentation, sensible folder structure, and consistent error handling without unnecessary over-engineering.
+A lightweight RESTful API for managing tasks, built with FastAPI and designed to demonstrate CRUD operations, request validation, and interactive API documentation.
 
 ## Features
 
-- **CRUD Operations:** Create, Read, Update, and Delete tasks.
-- **Search & Filtering:** Search for tasks by title using a query parameter.
-- **Statistics:** View total, completed, and pending task counts.
-- **Data Validation:** Pydantic models ensure valid input (e.g., non-empty titles).
-- **Interactive Documentation:** Beautiful Swagger UI (`/docs`) out of the box.
+- CRUD operations for task management
+- Request validation using Pydantic
+- Interactive OpenAPI (Swagger UI) documentation
+- Search tasks by title
+- Task statistics endpoint
+- In-memory data storage
+- Standard HTTP status codes and error responses
+
+## Tech Stack
+
+- Python
+- FastAPI
+- Pydantic
+- Uvicorn
 
 ## Installation
 
@@ -30,7 +39,7 @@ A clean, minimal, and fully functional REST API for managing tasks, built with F
    pip install -r requirements.txt
    ```
 
-## Running the API
+## Running the Application
 
 Start the development server with Uvicorn:
 
@@ -38,31 +47,31 @@ Start the development server with Uvicorn:
 uvicorn app.main:app --reload
 ```
 
-The API will be available at [http://127.0.0.1:8000](http://127.0.0.1:8000). You can view the interactive documentation at [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs).
+## API Documentation
 
-## API Endpoint Table
+Interactive API documentation is available at:
+
+http://127.0.0.1:8000/docs
+
+![Swagger Screenshot](swagger_screenshot.png)
+
+## API Endpoints
 
 | Method | Endpoint | Description |
-|---|---|---|
-| `GET` | `/` | Returns a welcome message. |
-| `GET` | `/health` | Server health check. |
-| `GET` | `/tasks` | Retrieves all tasks. Accepts optional `?search=` query. |
-| `GET` | `/tasks/{id}` | Retrieves a single task by its ID. |
-| `POST` | `/tasks` | Creates a new task. |
-| `PUT` | `/tasks/{id}` | Updates an existing task's title or status. |
-| `DELETE` | `/tasks/{id}` | Permanently deletes a task. |
-| `GET` | `/stats` | Returns total, completed, and pending task statistics. |
+|---------|----------|-------------|
+| GET | / | API information |
+| GET | /health | Health check |
+| GET | /tasks | Retrieve all tasks |
+| GET | /tasks/{id} | Retrieve a task |
+| POST | /tasks | Create a task |
+| PUT | /tasks/{id} | Update a task |
+| DELETE | /tasks/{id} | Delete a task |
+| GET | /stats | Retrieve task statistics |
 
-## Interactive Documentation
-
-FastAPI automatically generates an interactive Swagger UI for the API endpoints. You can view it by navigating to `/docs` in your browser.
-
-## Example curl Output
-
-Here's an example of creating a new task using `curl`:
+## Example Request
 
 ```bash
-curl -X 'POST' \
+curl -i -X 'POST' \
   'http://127.0.0.1:8000/tasks' \
   -H 'accept: application/json' \
   -H 'Content-Type: application/json' \
@@ -72,7 +81,11 @@ curl -X 'POST' \
 ```
 
 **Response:**
-```json
+```http
+HTTP/1.1 201 Created
+content-length: 49
+content-type: application/json
+
 {
   "title": "Study FastAPI",
   "id": 4,
@@ -80,6 +93,22 @@ curl -X 'POST' \
 }
 ```
 
+## Project Structure
+
+```text
+todo-fastapi/
+│
+├── app/
+│   ├── main.py
+│   ├── schemas.py
+│   ├── data.py
+│   └── helpers.py
+│
+├── requirements.txt
+├── README.md
+└── LICENSE
+```
+
 ## License
 
-This project is licensed under the MIT License.
+Licensed under the MIT License.
