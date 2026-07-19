@@ -2,7 +2,7 @@ from fastapi import FastAPI, HTTPException
 from typing import List
 from app.data import tasks
 from app.helpers import get_task_by_id, generate_new_id
-from app.schemas import Task, TaskCreate
+from app.schemas import Task, TaskCreate, TaskUpdate
 
 app = FastAPI()
 
@@ -38,3 +38,20 @@ def create_task(task_in: TaskCreate):
     }
     tasks.append(new_task)
     return new_task
+
+@app.put("/tasks/{task_id}", response_model=Task)
+def update_task(task_id: int, task_in: TaskUpdate):
+    task = get_task_by_id(task_id)
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+    
+    if task_in.title is not None:
+        title = task_in.title.strip()
+        if not title:
+            raise HTTPException(status_code=400, detail="Title cannot be empty")
+        task["title"] = title
+        
+    if task_in.done is not None:
+        task["done"] = task_in.done
+        
+    return task
