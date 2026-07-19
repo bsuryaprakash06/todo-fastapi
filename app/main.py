@@ -1,8 +1,8 @@
 from fastapi import FastAPI, HTTPException
 from typing import List
 from app.data import tasks
-from app.helpers import get_task_by_id
-from app.schemas import Task
+from app.helpers import get_task_by_id, generate_new_id
+from app.schemas import Task, TaskCreate
 
 app = FastAPI()
 
@@ -24,3 +24,17 @@ def get_task(task_id: int):
     if not task:
         raise HTTPException(status_code=404, detail="Task not found")
     return task
+
+@app.post("/tasks", response_model=Task, status_code=201)
+def create_task(task_in: TaskCreate):
+    title = task_in.title.strip()
+    if not title:
+        raise HTTPException(status_code=400, detail="Title cannot be empty")
+    
+    new_task = {
+        "id": generate_new_id(),
+        "title": title,
+        "done": False
+    }
+    tasks.append(new_task)
+    return new_task
