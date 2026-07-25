@@ -1,15 +1,14 @@
 # Todo FastAPI
 
-A lightweight RESTful API for managing tasks built with FastAPI, featuring CRUD operations, request validation, and interactive API documentation.
+A lightweight RESTful API for managing tasks built with FastAPI, featuring CRUD operations, request validation, and an SQLite database for persistent storage.
 
 ## Features
 
 - CRUD operations for task management
 - Request validation using Pydantic
 - Interactive OpenAPI (Swagger UI) documentation
-- Search tasks by title
-- Task statistics endpoint
-- In-memory data storage
+- Persistent SQLite database (`tasks.db`)
+- Automatic database initialization and seeding
 - Standard HTTP status codes and error responses
 
 ## Tech Stack
@@ -18,6 +17,21 @@ A lightweight RESTful API for managing tasks built with FastAPI, featuring CRUD 
 - FastAPI
 - Pydantic
 - Uvicorn
+- SQLite3 (Built-in)
+
+## Database Overview
+
+This project uses SQLite for persistent storage because it is lightweight, requires no separate server process, and perfectly suits the needs of a simple CRUD API.
+
+The database is located at `tasks.db` in the root of the project. It is created automatically the first time the server starts, and the `tasks` table is seeded with three sample tasks if it is empty.
+
+### Example SQL Query
+```sql
+SELECT * FROM tasks WHERE done = 0;
+```
+
+### Database Screenshot
+![Database Screenshot](db_screenshot.png)
 
 ## Installation
 
@@ -66,7 +80,6 @@ The interactive API documentation is available at `http://127.0.0.1:8000/docs`.
 | POST | /tasks | Create a task |
 | PUT | /tasks/{id} | Update a task |
 | DELETE | /tasks/{id} | Delete a task |
-| GET | /stats | Retrieve task statistics |
 
 ## Example Request
 
@@ -76,18 +89,18 @@ curl -i -X 'POST' \
   -H 'accept: application/json' \
   -H 'Content-Type: application/json' \
   -d '{
-  "title": "Study FastAPI"
+  "title": "Study SQLite"
 }'
 ```
 
 **Response:**
 ```http
 HTTP/1.1 201 Created
-Content-Length: 49
+Content-Length: 48
 Content-Type: application/json
 
 {
-  "title": "Study FastAPI",
+  "title": "Study SQLite",
   "id": 4,
   "done": false
 }
@@ -101,11 +114,12 @@ todo-fastapi/
 ├── app/
 │   ├── main.py
 │   ├── schemas.py
-│   ├── data.py
+│   ├── database.py
 │   └── helpers.py
 │
 ├── requirements.txt
 ├── README.md
+├── tasks.db
 └── LICENSE
 ```
 
