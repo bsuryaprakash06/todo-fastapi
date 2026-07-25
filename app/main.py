@@ -85,8 +85,15 @@ def update_task(task_id: int, task_in: TaskUpdate):
 
 @app.delete("/tasks/{task_id}", status_code=204, summary="Delete Task", description="Deletes a task permanently.")
 def delete_task(task_id: int):
-    task = get_task_by_id(task_id)
-    if not task:
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM tasks WHERE id = ?", (task_id,))
+    row = cursor.fetchone()
+    if not row:
+        conn.close()
         raise HTTPException(status_code=404, detail="Task not found")
-    tasks.remove(task)
+        
+    cursor.execute("DELETE FROM tasks WHERE id = ?", (task_id,))
+    conn.commit()
+    conn.close()
     return None
