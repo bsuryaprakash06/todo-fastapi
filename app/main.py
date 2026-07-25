@@ -1,7 +1,6 @@
 from fastapi import FastAPI, HTTPException
 from typing import List, Optional
-from app.data import tasks
-from app.helpers import get_task_by_id, generate_new_id
+from app.database import get_db_connection
 from app.schemas import Task, TaskCreate, TaskUpdate
 
 app = FastAPI()
@@ -14,29 +13,25 @@ def read_root():
 def health_check():
     return {"status": "ok"}
 
-@app.get("/tasks", response_model=List[Task], summary="Get All Tasks", description="Retrieves a list of all tasks. Optionally filter by a search string.")
-def get_tasks(search: Optional[str] = None):
-    if search:
-        return [t for t in tasks if search.lower() in t["title"].lower()]
-    return tasks
-
-@app.get("/stats", summary="Get Task Statistics", description="Returns total, completed, and pending task counts.")
-def get_stats():
-    total = len(tasks)
-    completed = sum(1 for t in tasks if t["done"])
-    pending = total - completed
-    return {
-        "total": total,
-        "completed": completed,
-        "pending": pending
-    }
+@app.get("/tasks", response_model=List[Task], summary="Get All Tasks", description="Retrieves a list of all tasks.")
+def get_tasks():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM tasks")
+    rows = cursor.fetchall()
+    conn.close()
+    return [dict(row) for row in rows]
 
 @app.get("/tasks/{task_id}", response_model=Task, summary="Get Task by ID", description="Retrieves a specific task by its integer ID.")
 def get_task(task_id: int):
-    task = get_task_by_id(task_id)
-    if not task:
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM tasks WHERE id = ?", (task_id,))
+    row = cursor.fetchone()
+    conn.close()
+    if not row:
         raise HTTPException(status_code=404, detail="Task not found")
-    return task
+    return dict(row)
 
 @app.post("/tasks", response_model=Task, status_code=201, summary="Create Task", description="Creates a new task. The title is required and cannot be empty or just whitespace.")
 def create_task(task_in: TaskCreate):
