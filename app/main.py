@@ -53,20 +53,35 @@ def create_task(task_in: TaskCreate):
 
 @app.put("/tasks/{task_id}", response_model=Task, summary="Update Task", description="Updates an existing task's title and/or completion status.")
 def update_task(task_id: int, task_in: TaskUpdate):
-    task = get_task_by_id(task_id)
-    if not task:
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM tasks WHERE id = ?", (task_id,))
+    row = cursor.fetchone()
+    if not row:
+        conn.close()
         raise HTTPException(status_code=404, detail="Task not found")
+    
+    current_title = row["title"]
+    current_done = row["done"]
     
     if task_in.title is not None:
         title = task_in.title.strip()
         if not title:
+            conn.close()
             raise HTTPException(status_code=400, detail="Title cannot be empty")
-        task["title"] = title
+        current_title = title
         
     if task_in.done is not None:
-        task["done"] = task_in.done
+        current_done = task_in.done
         
-    return task
+    cursor.execute("UPDATE tasks SET title = ?, done = ? WHERE id = ?", (current_title, current_done, task_id))
+    conn.commit()
+    
+    cursor.execute("SELECT * FROM tasks WHERE id = ?", (task_id,))
+    updated_task = cursor.fetchone()
+    conn.close()
+    
+    return dict(updated_task)
 
 @app.delete("/tasks/{task_id}", status_code=204, summary="Delete Task", description="Deletes a task permanently.")
 def delete_task(task_id: int):
