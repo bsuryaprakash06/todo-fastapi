@@ -13,14 +13,51 @@ def read_root():
 def health_check():
     return {"status": "ok"}
 
-@app.get("/tasks", response_model=List[Task], summary="Get All Tasks", description="Retrieves a list of all tasks.")
-def get_tasks():
+@app.get("/tasks", response_model=List[Task], summary="Get All Tasks", description="Retrieves a list of all tasks. Optionally filter by a search string or completion status, and sort alphabetically.")
+def get_tasks(search: Optional[str] = None, done: Optional[bool] = None, sort: bool = False):
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT * FROM tasks")
+    
+    query = "SELECT * FROM tasks WHERE 1=1"
+    params = []
+    
+    if search:
+        query += " AND title LIKE ?"
+        params.append(f"%{search}%")
+        
+    if done is not None:
+        query += " AND done = ?"
+        params.append(1 if done else 0)
+        
+    if sort:
+        query += " ORDER BY title"
+        
+    cursor.execute(query, params)
     rows = cursor.fetchall()
     conn.close()
     return [dict(row) for row in rows]
+
+@app.get("/stats", summary="Get Task Statistics", description="Returns total, completed, and pending task counts.")
+def get_stats():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    cursor.execute("SELECT COUNT(*) FROM tasks")
+    total = cursor.fetchone()[0]
+    
+    cursor.execute("SELECT COUNT(*) FROM tasks WHERE done = 1")
+    completed = cursor.fetchone()[0]
+    
+    cursor.execute("SELECT COUNT(*) FROM tasks WHERE done = 0")
+    pending = cursor.fetchone()[0]
+    
+    conn.close()
+    
+    return {
+        "total": total,
+        "completed": completed,
+        "pending": pending
+    }
 
 @app.get("/tasks/{task_id}", response_model=Task, summary="Get Task by ID", description="Retrieves a specific task by its integer ID.")
 def get_task(task_id: int):
