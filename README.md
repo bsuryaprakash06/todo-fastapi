@@ -29,10 +29,6 @@ The database is located at `tasks.db` in the root of the project. It is created 
 ```sql
 SELECT * FROM tasks WHERE done = 0;
 ```
-
-### Database Screenshot
-![Database Screenshot](db_screenshot.png)
-
 ## Installation
 
 1. Clone the repository:
