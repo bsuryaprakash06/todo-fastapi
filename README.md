@@ -1,69 +1,62 @@
 # Todo FastAPI
 
-A production-ready RESTful API for managing tasks built with FastAPI and PostgreSQL, featuring a layered architecture (Route → Service → Repository → Database), request validation with Pydantic, and multi-container orchestration using Docker Compose.
-
-## Architecture Overview
-
-The application is structured into decoupled layers following clean architecture principles and containerized using Docker Compose:
-
-```text
-                        Docker Compose
-                              │
-               ┌──────────────┴──────────────┐
-               │                             │
-               ▼                             ▼
-        FastAPI Container              PostgreSQL Container
-               │                             │
-               ▼                             ▼
-        routes/tasks.py                 tasks table
-               │                             │
-               ▼                             │
-        services/task_service.py             │
-               │                             │
-               ▼                             │
-      repositories/postgres.py ──────────────┘
-                                             │
-                                             ▼
-                                    Named Docker Volume
-                                      (postgres_data)
-```
-
-### Layer Responsibilities
-
-- **Routes (`app/routes/tasks.py`)**: Handles HTTP requests, parameter extraction, response serialization, status codes, and translates domain errors to HTTP exceptions.
-- **Service (`app/services/task_service.py`)**: Implements business rules, validation, input normalization (e.g. whitespace trimming), and domain exceptions (`TaskNotFoundError`, `InvalidTaskTitleError`). Independent of HTTP/FastAPI.
-- **Repository (`app/repositories/`)**: Abstract interface (`interface.py`) and PostgreSQL implementation (`postgres.py`) encapsulating database access via SQLAlchemy.
-- **Database (`app/database/`)**: Database connection, session management (`connection.py`), and SQLAlchemy ORM models (`models/task.py`).
+A production-ready RESTful API for managing tasks built with FastAPI, PostgreSQL, and Supabase Authentication. The project features a layered architecture (Route → Service → Repository → Database), request validation with Pydantic, and multi-container orchestration using Docker Compose.
 
 ## Features
 
-- Complete CRUD operations for task management
-- Search tasks by keyword (`GET /tasks?search=...`)
-- Filter tasks by completion status (`GET /tasks?done=true`)
-- Sort tasks alphabetically (`GET /tasks?sort=true`)
-- Task statistics endpoint (`GET /stats`)
-- Request validation and serialization using Pydantic
-- Automatic database table creation and safe initial seeding
-- Persistent data storage using Docker named volumes
-- Interactive OpenAPI (Swagger UI) documentation
+- **Authentication**: JWT-based Bearer Authentication integrated with Supabase Auth.
+- **Task Management**: Complete CRUD operations for tasks.
+- **Advanced Querying**: Search by keyword, filter by status, and sort alphabetically.
+- **Statistics**: Task count statistics endpoint.
+- **Validation**: Strict request and response validation using Pydantic.
+- **Architecture**: Decoupled layers separating business logic from HTTP and database concerns.
+- **Containerization**: Automatic database table creation, seeding, and persistent storage via Docker Compose.
+- **Documentation**: Interactive Swagger UI with Bearer Authentication lock capabilities.
 
 ## Tech Stack
 
 - **Framework**: FastAPI
 - **Language**: Python 3.11+
+- **Authentication**: Supabase (JWT)
 - **Database**: PostgreSQL 16 (Alpine)
 - **ORM**: SQLAlchemy
 - **Validation**: Pydantic
 - **Containerization**: Docker & Docker Compose
-- **Server**: Uvicorn
 
-## Quick Start with Docker Compose
+## Architecture Overview
 
-### Prerequisites
+Supabase handles user accounts and issues JWTs. FastAPI receives the requests, verifies the tokens using a reusable dependency, and handles business logic. Data is stored in PostgreSQL.
 
-- [Docker](https://docs.docker.com/get-docker/) & [Docker Compose](https://docs.docker.com/compose/install/) installed on your machine.
+```text
+       ┌──────────────┐
+       │   Supabase   │
+       │     Auth     │
+       └──────┬───────┘
+              │ JWT / User
+              ▼
+┌──────────────┐   ┌─────────────┐
+│    Client    │──►│   FastAPI   │
+│ Swagger/Curl │   │             │
+└──────────────┘   └──────┬──────┘
+                          │
+             ┌────────────┴────────────┐
+             │                         │
+      Auth Dependency            Public Routes
+             │
+             ▼
+      Protected Routes
+             │
+             ▼
+       Task Services
+             │
+             ▼
+        Repository
+             │
+             ▼
+        PostgreSQL
+```
 
-### Running the Application
+## Installation
 
 1. Clone the repository:
    ```bash
@@ -71,101 +64,133 @@ The application is structured into decoupled layers following clean architecture
    cd todo-fastapi
    ```
 
-2. Start the services with Docker Compose:
-   ```bash
-   docker compose up --build
-   ```
-
-   Docker Compose will:
-   - Build the FastAPI container image.
-   - Start the PostgreSQL container (`todo_postgres_db`).
-   - Create and mount the persistent volume `postgres_data`.
-   - Wait for the database healthcheck to pass before starting the FastAPI app (`todo_fastapi_app`).
-   - Automatically initialize tables and seed 3 sample tasks.
-
-3. The API will be available at:
-   - API Root: `http://127.0.0.1:8000`
-   - Interactive Swagger Docs: `http://127.0.0.1:8000/docs`
-   - ReDoc: `http://127.0.0.1:8000/redoc`
-
-4. To stop the containers:
-   ```bash
-   docker compose down
-   ```
-
-   To stop and remove persistent volumes:
-   ```bash
-   docker compose down -v
-   ```
-
-## Local Development (Without Docker)
-
-1. Create and activate a virtual environment:
+2. Create and activate a virtual environment:
    ```bash
    python -m venv venv
-   # On Windows:
+   # Windows:
    venv\Scripts\activate
-   # On macOS/Linux:
+   # macOS/Linux:
    source venv/bin/activate
    ```
 
-2. Install dependencies:
+3. Install dependencies:
    ```bash
    pip install -r requirements.txt
    ```
 
-3. Set the `DATABASE_URL` environment variable:
+## Environment Variables
+
+Create a `.env` file in the root of the project with the following structure:
+
+```env
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=postgres
+POSTGRES_DB=tasks
+POSTGRES_HOST=db
+POSTGRES_PORT=5432
+DATABASE_URL=postgresql://postgres:postgres@db:5432/tasks
+
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_KEY=your-client-key
+```
+
+Make sure to replace `SUPABASE_URL` and `SUPABASE_KEY` with your actual Supabase project credentials.
+
+## Running the Application
+
+### Using Docker Compose (Recommended)
+
+1. Start the services:
    ```bash
-   # Example:
-   export DATABASE_URL="postgresql://<user>:<password>@localhost:5432/<dbname>"
+   docker compose up --build
    ```
 
-4. Start the development server:
-   ```bash
-   uvicorn app.main:app --reload
-   ```
+2. The API will be available at:
+   - API Root: `http://127.0.0.1:8000`
+   - Interactive Swagger Docs: `http://127.0.0.1:8000/docs`
 
-## API Endpoints
+### Local Development (Without Docker)
 
-| Method | Endpoint | Description | Query Parameters / Body |
-|--------|----------|-------------|-------------------------|
-| `GET` | `/` | Welcome message | None |
-| `GET` | `/health` | Server health check | None |
-| `GET` | `/tasks` | Retrieve all tasks | `search` (str), `done` (bool), `sort` (bool) |
-| `GET` | `/tasks/{id}` | Retrieve task by ID | `id` (int, path) |
-| `POST` | `/tasks` | Create a new task | Body: `{"title": "...", "done": false}` |
-| `PUT` | `/tasks/{id}` | Update an existing task | Body: `{"title": "...", "done": true}` |
-| `DELETE` | `/tasks/{id}` | Delete a task | `id` (int, path) |
-| `GET` | `/stats` | Task count statistics | None |
+If you have a local PostgreSQL instance running:
+```bash
+uvicorn app.main:app --reload
+```
+
+## Authentication Flow
+
+1. User submits `email` and `password` to `/auth/signup`.
+2. User submits the same credentials to `/auth/login` to receive an `access_token`.
+3. The client includes this token in the `Authorization` header as `Bearer <token>` for protected routes.
+4. FastAPI validates the token against Supabase via the `get_current_user` dependency.
+5. If valid, access is granted. If missing or invalid, a `401 Unauthorized` response is returned.
+
+## API Reference
+
+### Authentication & Authorization
+
+| Method | Endpoint | Auth Required | Description |
+|--------|----------|---------------|-------------|
+| `POST` | `/auth/signup` | No | Register a new user |
+| `POST` | `/auth/login` | No | Login and obtain JWT tokens |
+| `POST` | `/auth/logout` | **Yes** | Invalidate the current session |
+| `GET` | `/public/info` | No | Public endpoint test |
+| `GET` | `/protected/profile`| **Yes** | Get current authenticated user profile |
+| `GET` | `/protected/dashboard`| **Yes** | Get current user's dashboard |
+
+### Tasks
+
+| Method | Endpoint | Auth Required | Description |
+|--------|----------|---------------|-------------|
+| `GET` | `/tasks` | No | Retrieve all tasks |
+| `POST` | `/tasks` | No | Create a new task |
+| `GET` | `/tasks/{id}`| No | Retrieve a task by ID |
+| `PUT` | `/tasks/{id}`| No | Update an existing task |
+| `DELETE`| `/tasks/{id}`| No | Delete a task |
+
+## Swagger Documentation
+
+FastAPI's Swagger UI automatically integrates with the `HTTPBearer` security scheme. You can click the "Authorize" button (lock icon) to input your JWT token, and all protected endpoints will automatically include it in requests.
+
+![Swagger UI](swagger_auth_screenshot.jpg)
+
+## Testing
+
+A testing pipeline script is provided for verifying layered architecture behavior. To run the automated validation tests:
+```bash
+python scratch/test_a3_pipeline.py
+```
 
 ## Project Structure
 
 ```text
 TaskAPI/
 ├── app/
+│   ├── auth/
+│   │   ├── __init__.py
+│   │   ├── dependencies.py      # get_current_user dependency
+│   │   └── supabase.py          # Supabase client instantiation
 │   ├── database/
 │   │   ├── models/
-│   │   │   └── task.py          # SQLAlchemy ORM TaskModel
-│   │   └── connection.py        # Engine, SessionLocal, init_db
+│   │   └── connection.py
 │   ├── repositories/
-│   │   ├── interface.py         # TaskRepositoryInterface (ABC)
-│   │   └── postgres.py          # PostgresTaskRepository (SQLAlchemy)
+│   │   ├── interface.py
+│   │   └── postgres.py
 │   ├── routes/
-│   │   └── tasks.py             # FastAPI APIRouter & HTTP handlers
+│   │   ├── auth.py              # Auth endpoints (login, signup)
+│   │   ├── protected.py         # Protected endpoints
+│   │   ├── public.py            # Public endpoints
+│   │   └── tasks.py             # Task endpoints
 │   ├── schemas/
-│   │   └── task.py              # Pydantic schemas (Task, TaskCreate, TaskUpdate)
+│   │   ├── auth.py              # Pydantic schemas for Auth
+│   │   └── task.py
 │   ├── services/
-│   │   └── task_service.py      # Business logic & domain errors
+│   │   └── task_service.py
 │   └── main.py                  # FastAPI application & lifespan
-├── compose.yml                  # Docker Compose configuration
-├── Dockerfile                   # FastAPI container build instructions
-├── requirements.txt             # Python dependencies
-├── .env.example                 # Example environment variables
-├── .gitignore                   # Git ignore rules
-├── LICENSE                      # MIT License
-└── README.md                    # Project documentation
+├── compose.yml
+├── Dockerfile
+├── requirements.txt
+├── .env.example
+├── .gitignore
+├── LICENSE
+└── README.md
 ```
-
-## License
-
-This project is licensed under the MIT License.
