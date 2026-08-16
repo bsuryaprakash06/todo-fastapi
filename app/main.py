@@ -3,6 +3,8 @@ from fastapi import FastAPI
 from app.database.connection import init_db
 from app.routes.tasks import router as tasks_router
 from app.routes.auth import router as auth_router
+from app.routes.public import router as public_router
+from app.routes.protected import router as protected_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -19,3 +21,5 @@ app = FastAPI(
 
 app.include_router(tasks_router)
 app.include_router(auth_router)
+app.include_router(public_router)
+app.include_router(protected_router)
