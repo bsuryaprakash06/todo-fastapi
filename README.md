@@ -11,7 +11,7 @@ A production-ready RESTful API for managing tasks built with FastAPI, PostgreSQL
 - **Validation**: Strict request and response validation using Pydantic.
 - **Architecture**: Decoupled layers separating business logic from HTTP and database concerns.
 - **Containerization**: Automatic database table creation, seeding, and persistent storage via Docker Compose.
-- **Documentation**: Interactive Swagger UI with Bearer Authentication lock capabilities.
+- **Documentation**: Offline-capable Interactive Swagger UI served completely from local static files (no external CDNs).
 
 ## Tech Stack
 
@@ -95,6 +95,8 @@ SUPABASE_KEY=your-client-key
 ```
 
 Make sure to replace `SUPABASE_URL` and `SUPABASE_KEY` with your actual Supabase project credentials.
+
+> **Local Development Tip for Supabase**: Free-tier Supabase projects enforce strict email rate limits (usually 2-3 per hour). To bypass this during local development, go to your Supabase Dashboard **Project Settings > Authentication > SMTP**, enable Custom SMTP, and put fake details. Then, go to **Auth Providers > Email** and turn **OFF** "Confirm email". You can now sign up test users indefinitely without hitting limits!
 
 ## Running the Application
 
@@ -185,6 +187,9 @@ TaskAPI/
 │   │   └── task.py
 │   ├── services/
 │   │   └── task_service.py
+│   ├── static/
+│   │   ├── swagger-ui-bundle.js # Offline Swagger UI Scripts
+│   │   └── swagger-ui.css
 │   └── main.py                  # FastAPI application & lifespan
 ├── compose.yml
 ├── Dockerfile
