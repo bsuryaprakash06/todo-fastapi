@@ -153,7 +153,7 @@ uvicorn app.main:app --reload
 
 FastAPI's Swagger UI automatically integrates with the `HTTPBearer` security scheme. You can click the "Authorize" button (lock icon) to input your JWT token, and all protected endpoints will automatically include it in requests.
 
-![Swagger UI](swagger_auth_screenshot.png)
+![Swagger UI](swagger_auth_screenshot.PNG)
 
 ## Testing
 
